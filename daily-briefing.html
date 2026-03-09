@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personal Agent 每日热帖</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    color: #e0e0e0;
+    font-family: -apple-system, 'SF Pro Display', 'PingFang SC', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+  }
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 60px 24px 100px;
+  }
+  header {
+    margin-bottom: 48px;
+  }
+  header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #f5f5f7;
+    margin-bottom: 8px;
+  }
+  header .subtitle {
+    font-size: 14px;
+    color: #86868b;
+  }
+  .day-section {
+    margin-bottom: 56px;
+  }
+  .day-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .day-header .date {
+    font-size: 20px;
+    font-weight: 600;
+    color: #f5f5f7;
+  }
+  .day-header .weekday {
+    font-size: 13px;
+    color: #86868b;
+    background: rgba(255,255,255,0.06);
+    padding: 2px 10px;
+    border-radius: 12px;
+  }
+  .post {
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .post:last-child { border-bottom: none; }
+  .post-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .post-number {
+    font-size: 12px;
+    font-weight: 600;
+    color: #0a84ff;
+    background: rgba(10,132,255,0.12);
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .post-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #f5f5f7;
+  }
+  .post-tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 1px 8px;
+    border-radius: 8px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .tag-product { background: rgba(52,199,89,0.15); color: #34c759; }
+  .tag-insight { background: rgba(255,214,10,0.15); color: #ffd60a; }
+  .tag-user { background: rgba(175,130,255,0.15); color: #af82ff; }
+  .tag-industry { background: rgba(10,132,255,0.15); color: #0a84ff; }
+  .post-body {
+    font-size: 14px;
+    color: #a1a1a6;
+    margin-left: 34px;
+    margin-bottom: 8px;
+  }
+  .post-link {
+    margin-left: 34px;
+  }
+  .post-link a {
+    font-size: 12px;
+    color: #0a84ff;
+    text-decoration: none;
+    opacity: 0.8;
+  }
+  .post-link a:hover { opacity: 1; text-decoration: underline; }
+  .post-meta {
+    font-size: 12px;
+    color: #48484a;
+    margin-left: 34px;
+    margin-top: 4px;
+  }
+  .trend-box {
+    background: rgba(255,255,255,0.04);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-top: 16px;
+  }
+  .trend-box h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #86868b;
+    margin-bottom: 12px;
+  }
+  .trend-box li {
+    font-size: 13px;
+    color: #a1a1a6;
+    margin-bottom: 6px;
+    list-style: none;
+    padding-left: 16px;
+    position: relative;
+  }
+  .trend-box li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: #48484a;
+  }
+  .nav-tabs {
+    position: sticky;
+    top: 0;
+    background: rgba(10,10,10,0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 12px 0;
+    z-index: 10;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .nav-tabs a {
+    font-size: 13px;
+    color: #86868b;
+    text-decoration: none;
+    padding: 4px 14px;
+    border-radius: 16px;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .nav-tabs a:hover, .nav-tabs a.active {
+    background: rgba(255,255,255,0.1);
+    color: #f5f5f7;
+  }
+  @media (max-width: 734px) {
+    .container { padding: 40px 16px 80px; }
+    header h1 { font-size: 22px; }
+    .day-header .date { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>👾 Personal Agent 每日热帖</h1>
+    <div class="subtitle">X / Reddit 精选 · 每日 9:00 更新</div>
+  </header>
+
+  <nav class="nav-tabs" id="navTabs"></nav>
+
+  <div id="content"></div>
+</div>
+
+<script>
+const briefings = [
+  {
+    date: '2026-03-09',
+    weekday: '周日',
+    posts: [
+      {
+        title: 'Shelly Palmer — 「Deploying Claws」深度文章',
+        tag: 'insight', tagText: '行业观点',
+        body: '介绍 "claw" 概念：运行在本地机器上、自主执行任务的 personal AI agent。追溯了 OpenClaw 从创建到加入 OpenAI 的历程，附带详细部署指南。',
+        link: 'https://x.com/shellypalmer/status/2030729336907612614'
+      },
+      {
+        title: '阿里开源 CoPaw — 高性能 Personal Agent 工作站',
+        tag: 'product', tagText: '产品发布',
+        body: 'CoPaw 是连接标准 LLM 推理与持久化任务型 personal agent 的技术框架，支持多通道 AI 工作流和记忆管理。',
+        link: 'https://x.com/Marktechpost/status/2028049731348476101'
+      },
+      {
+        title: 'Steam Deck 上的 AI Agent "BMO" 完全开源',
+        tag: 'product', tagText: '开源项目',
+        body: '140万订阅 YouTuber 越狱 Steam Deck，构建名为 BMO 的 AI agent 并完全开源。"We\'re slowly entering the era where everyone builds their own personal AI companion."',
+        link: 'https://x.com/EmrysEmryssnr/status/2030731159399788644'
+      },
+      {
+        title: 'Sigma School 为师生配备 Personal Agent',
+        tag: 'industry', tagText: '行业应用',
+        body: '用 OpenClaw 为每位老师和学生配备 AI agent。中国一所学校用 M1 Ultra Mac 集群本地部署私有 AI agent，导入全校课程语料。',
+        link: 'https://x.com/WayneVaughan/status/2030623720771842197'
+      },
+      {
+        title: 'Slack 将 Slackbot 重新定义为 Personal Agent',
+        tag: 'product', tagText: '产品发布',
+        body: 'Slack 将重新设计的 Slackbot 定位为企业员工的开箱即用 personal agent。73转 256赞 67K浏览。',
+        link: 'https://x.com/SlackHQ/status/2011063980572254587'
+      },
+      {
+        title: 'Sahara AI — 什么在阻止你搭建 Personal Agent？',
+        tag: 'user', tagText: '用户讨论',
+        body: '引发14条回复的社区讨论帖，反映出 personal agent 正在从开发者圈层向更广泛用户群扩展。',
+        link: 'https://x.com/SaharaAI/status/2030757459925799091'
+      },
+      {
+        title: 'Claude Max 能跑 Personal Agent 吗？',
+        tag: 'user', tagText: '用户反馈',
+        body: '代表了用户对订阅制 vs 按量计费模式的真实困惑：VPS上用Claude Max跑OpenClaw是否合规？',
+        link: 'https://x.com/bibz0r/status/2030744416105709808'
+      },
+      {
+        title: 'Personal Agent 作为编程导师',
+        tag: 'user', tagText: '用户案例',
+        body: '用 personal agent 扫描 AI 开发技能需求，自动生成一年学习路线图，在 codex 中像 senior engineer tutor 一样陪伴学习。',
+        link: 'https://x.com/VinceGlakas/status/2030746774416072821'
+      },
+      {
+        title: 'Henry_科崽 — CoPaw 详细拆解',
+        tag: 'insight', tagText: '行业观点',
+        body: '「国产版 OpenClaw 出现了！」详细拆解阿里 CoPaw：不只是"聊天更聪明"，而是真正能"替你干活"的 AI。6回复 29赞 6K浏览。',
+        link: 'https://x.com/KeHenryA8/status/2026913486861946931'
+      },
+      {
+        title: 'ODEI — Personal Agent App 的核心 UX 难题',
+        tag: 'insight', tagText: '行业观点',
+        body: '指出 personal agent 产品化的真正难点不在技术架构，而在用户上手体验（onboarding）。',
+        link: 'https://x.com/odei_ai/status/2030798785576603701'
+      }
+    ],
+    trends: [
+      'CoPaw（阿里）开源持续发酵，中英文社区都在讨论',
+      'Personal agent 正从开发者工具向教育、企业场景落地',
+      'BMO 开源项目反映 DIY personal companion 的草根热情',
+      '用户开始关心实际部署成本和订阅模式',
+      'Onboarding UX 被识别为 personal agent 产品化的核心瓶颈'
+    ]
+  },
+  {
+    date: '2026-03-08',
+    weekday: '周六',
+    posts: [
+      {
+        title: 'Sahara AI — Sorin 个人代理即将上线',
+        tag: 'product', tagText: '产品发布',
+        body: 'Sahara AI 发布2026路线图，Q1推出 Sorin —— 面向全球数字市场的个人代理，支持股票、加密货币和代币化资产交易。',
+        link: 'https://x.com/matyv_7/status/2029507925358575871'
+      },
+      {
+        title: '"深度上下文时代"— 记忆是 AI Agent 最大的瓶颈',
+        tag: 'insight', tagText: '行业观点',
+        body: '"忘记的Agent毫无用处，了解你生活的Agent才是伙伴。"描述了能提前数月规划并通过分析睡眠模式检测倦怠的深度个人代理。',
+        link: 'https://x.com/4n1rudh4'
+      },
+      {
+        title: 'AI Agent 双层记忆架构拆解',
+        tag: 'insight', tagText: '技术架构',
+        body: '核心规则（每次加载上下文）+ 语义搜索（按需检索）两层设计。"只配一层等于半残"。',
+        link: '#'
+      },
+      {
+        title: 'OpenClaw 2026.2.25 更新成为 X 热门趋势',
+        tag: 'product', tagText: '产品更新',
+        body: '安全修复和稳定性更新，1997条帖子讨论。社区讨论VPS部署、智能记忆降本67%、每日节省5-7小时。',
+        link: 'https://x.com/i/trending/2026915141233566022'
+      },
+      {
+        title: 'Liquid Agent V9 — 用户级隔离 Agent 容器',
+        tag: 'product', tagText: '产品发布',
+        body: '每个用户获得独立隔离的 always-on Agent 实例；Skills Marketplace 130+ 技能。',
+        link: 'https://x.com/LiquidAgentAI'
+      },
+      {
+        title: 'ODEI — Personal AI 的治理层',
+        tag: 'insight', tagText: '产品理念',
+        body: 'World Model 概念：持久记忆、规则、可审计执行。"如果你还在靠 prompt 驱动AI，你已经落后了。"',
+        link: 'https://x.com/odei_ai'
+      },
+      {
+        title: 'Starchild — 24/7 自主交易的个人 Agent',
+        tag: 'product', tagText: 'DeFi Agent',
+        body: '集成 OrderlyNetwork 进行永续合约自动交易，通过 Skills 教会 Agent 管理仓位、设止损、自动化策略。',
+        link: 'https://x.com/ole_eth'
+      },
+      {
+        title: 'Manus 创始人回顾 Personal Agent 定位',
+        tag: 'insight', tagText: '创业反思',
+        body: '当初非技术用户对AI Agent没有认知，用户教育压力全落在小团队。为此设计了 Cloud Sandbox 等安全隔离方案。',
+        link: 'https://x.com/peakji/status/2023698858287730870'
+      }
+    ],
+    trends: [
+      '记忆/上下文成为核心竞争点，双层记忆架构成为共识',
+      'Agent-as-Infrastructure 模式兴起（OpenClaw、ODEI）',
+      'DeFi/交易类 personal agent 集中爆发',
+      '从"聊天助手"到"自主经济参与者"的叙事转变加速'
+    ]
+  }
+];
+
+// Render nav
+const navTabs = document.getElementById('navTabs');
+briefings.forEach((b, i) => {
+  const a = document.createElement('a');
+  a.href = '#day-' + b.date;
+  a.textContent = b.date.replace('2026-', '') + ' ' + b.weekday;
+  if (i === 0) a.classList.add('active');
+  navTabs.appendChild(a);
+});
+
+// Render content
+const content = document.getElementById('content');
+briefings.forEach(b => {
+  let html = `<div class="day-section" id="day-${b.date}">
+    <div class="day-header">
+      <span class="date">${b.date}</span>
+      <span class="weekday">${b.weekday}</span>
+    </div>`;
+
+  b.posts.forEach((p, i) => {
+    const tagClass = 'tag-' + p.tag;
+    html += `<div class="post">
+      <div class="post-header">
+        <span class="post-number">${i + 1}</span>
+        <span class="post-title">${p.title}<span class="post-tag ${tagClass}">${p.tagText}</span></span>
+      </div>
+      <div class="post-body">${p.body}</div>
+      ${p.link !== '#' ? `<div class="post-link"><a href="${p.link}" target="_blank">查看原帖 →</a></div>` : ''}
+    </div>`;
+  });
+
+  if (b.trends) {
+    html += `<div class="trend-box"><h3>📊 趋势摘要</h3><ul>`;
+    b.trends.forEach(t => { html += `<li>${t}</li>`; });
+    html += `</ul></div>`;
+  }
+
+  html += `</div>`;
+  content.innerHTML += html;
+});
+
+// Scroll spy for nav
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      document.querySelectorAll('.nav-tabs a').forEach(a => a.classList.remove('active'));
+      const id = entry.target.id;
+      const activeLink = document.querySelector(`.nav-tabs a[href="#${id}"]`);
+      if (activeLink) activeLink.classList.add('active');
+    }
+  });
+}, { threshold: 0.3 });
+document.querySelectorAll('.day-section').forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
