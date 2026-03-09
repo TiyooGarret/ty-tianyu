@@ -346,6 +346,13 @@ briefings.forEach(b => {
       <span class="weekday">${b.weekday}</span>
     </div>`;
 
+  // Trends first
+  if (b.trends) {
+    html += `<div class="trend-box"><h3>📊 趋势摘要</h3><ul>`;
+    b.trends.forEach(t => { html += `<li>${t}</li>`; });
+    html += `</ul></div>`;
+  }
+
   b.posts.forEach((p, i) => {
     const tagClass = 'tag-' + p.tag;
     html += `<div class="post">
@@ -357,12 +364,6 @@ briefings.forEach(b => {
       ${p.link !== '#' ? `<div class="post-link"><a href="${p.link}" target="_blank">查看原帖 →</a></div>` : ''}
     </div>`;
   });
-
-  if (b.trends) {
-    html += `<div class="trend-box"><h3>📊 趋势摘要</h3><ul>`;
-    b.trends.forEach(t => { html += `<li>${t}</li>`; });
-    html += `</ul></div>`;
-  }
 
   html += `</div>`;
   content.innerHTML += html;
